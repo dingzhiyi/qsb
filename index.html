@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>クオンツソリューション・課題掲示板</title>
+    <link rel="stylesheet" href="lib/bootstrap.min.css">
+    <script src="lib/jquery-1.7.2.js"></script>
+    <script src="lib/bootstrap.js"></script>
+    <script src="lib/vue.js"></script>
+    <script type="text/javascript" src="data.json"></script>
+</head>
+<body>
+<div class="container" id="box">
+    <form role="form">
+        <div class="form-group">
+            <label for="username">担当者</label>
+            <input type="text" id="username" class="form-control" placeholder="担当者を入力してください" v-model="username">
+        </div>
+        <div class="form-group">
+            <label for="task">担当タスク</label>
+            <input type="text" id="task" class="form-control" placeholder="タスクを入力してください" v-model="task">
+        </div>
+        <div class="form-group">
+            <input type="button" value=追加 class="btn btn-primary" v-on:click="add()">
+            <input type="reset" value=最初に戻す class="btn btn-danger">
+        </div>
+    </form>
+    <hr>
+    <table class="table table-bordered table-hover">
+        <caption class="h3 text-info">担当テーブル</caption>
+        <tr class="text-danger">
+            <th class="text-center">番号</th>
+            <th class="text-center">担当者</th>
+            <th class="text-center">タスク</th>
+            <th class="text-center">変更</th>
+        </tr>
+        <tr class="text-center" v-for="(item,i) in myData">
+            <td>{{i+1}}</td>
+            <td>{{item.name}}</td>
+            <td>{{item.task}}</td>
+            <td>
+                <button class="btn btn-primary btn-xs" data-toggle="modal" data-target="#layer" v-on:click="nowIndex=i">削除</button>
+                <button class="btn btn-primary btn-xs" data-toggle="modal" data-target="#layer" v-on:click="nowIndex=i">編集</button>
+                <button class="btn btn-danger btn-xs" data-toggle="modal" data-target="#layer" v-on:click="nowIndex=i">完成</button>
+            </td>
+        </tr>
+        <tr v-show="myData.length != 0">
+            <td colspan="4" class="text-right">
+                <button data-toggle="modal" data-target="#layer" class="btn btn-primary btn-xs" v-on:click="nowIndex=-2">全部削除</button>
+            </td>
+        </tr>
+        <button class="btn btn-danger btn-xs" v-on:click="writeFile">更新</button>
+        <tr v-show="myData.length == 0">
+            <td colspan="4" class="text-center text-muted">
+                <p>現在何もありませんよ</p>
+            </td>
+        </tr>
+    </table>
+    <!--模态框-->
+    <div role="dialog" class="modal fade" id="layer">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                    <h4 class="modal-title">本当に削除しますか？</h4>
+                </div>
+                <div class="modal-body text-right">
+                    <button class="btn btn-danger btn-sm" data-dismiss="modal" v-on:click="deleteMsg(nowIndex)">確認</button>
+                    <button class="btn btn-primary btn-sm" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    var mydata = JSON.parse(data);
+    $(function () {
+        new Vue({
+            el: '#box',
+            data: {
+                myData: mydata,
+                username: '',
+                task: '',
+                nowIndex: -100
+            },
+            methods: {
+                add: function() {
+                    this.myData.push({
+                        name: this.username,
+                        task: this.task
+                    })
+                    this.username=''
+                    this.task=''
+                },
+                deleteMsg: function(n) {
+                    if(n==-2){
+                        this.myData=[]
+                    }else {
+                        this.myData.splice(n,1)
+                    }
+                },
+                saveAll: function(){
+                    var txtFile = "./data.json";
+                    var data = this.myData;
+                    var file = new File(txtFile,"write");
+                    var str = JSON.stringify(data);
+                    file.open();
+                    file.writeline(str);
+                    file.close();
+                },
+                writeFile: function(){
+                    var FORWRITING      = 2;    // 書き込み専用
+                    var TRISTATE_USEDEFAULT = -2;   // システムデフォルト
+
+                    //  ファイル関連の操作を提供するオブジェクトを取得
+                    var fs = new window.ActiveXObject( "Scripting.FileSystemObject" );
+
+    //  ファイルを書き込み専用で開く
+        var file = fs.OpenTextFile( "D:/Message-Board-master/data.json", FORWRITING, true, TRISTATE_USEDEFAULT);
+
+    //  文字列を書き込む(改行なし)
+        file.Write("data =\'".concat(JSON.stringify(mydata),"\';"));
+    //  ファイルを閉じる
+        file.Close();
+        console.log("Success!");
+        console.log(JSON.stringify(mydata));
+    //  オブジェクトを解放
+        fs = null;
+            }
+                }
+        })
+    })
+</script>
+</html>
